@@ -1,0 +1,10 @@
+still need to edit cbase to run with new alignment
+so currently saved cbase gene data with gene name from ensembl data
+but mut targets is cactus data with gene ids 
+
+idea is to only once extract and reverse complement seqs, then apply muts to pkl dicts
+containing gene, seq, trinucs
+muts positions in targets are saved relative to the start of the gene seq in pkl dicts
+
+so for ever run create a new pkl dict, then from new pkl dict can calculate new target size easily
+(just see run section in mutationmatrix generator after have seq and trinucs per gene)
