@@ -3,9 +3,6 @@ import numpy as np
 import glob
 from pathlib import Path
 
-#NOT DIVING BY M_n
-
-
 
 class MultiplyTargets:
     """
@@ -82,7 +79,7 @@ class MultiplyTargets:
         n = int(np.nansum(gene_df.values))
 
         if n >= self.min_possible_muts:
-            return l_n , n
+            return l_n / n, n
         return -1.0, n
 
     def _strand_for_gene(self, gene: str) -> str | None:

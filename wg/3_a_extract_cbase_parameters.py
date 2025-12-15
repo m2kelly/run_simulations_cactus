@@ -1,5 +1,5 @@
 import pandas as pd
-output_file = '/home/maria/run_simulations_cactus/auxiliary/cbase.csv'
+output_file = '/home/maria/run_simulations_cactus/auxiliary_wg/cbase.csv'
 #nonsyn_data_prep = '/home/maria/hossam_cbase_exons/CBase_external_matrix/Output_cactus/cactus/Anc4->hg38/nonsyn_output_data_preparation_cactus.txt'
 #syn_data_prep = '/home/maria/hossam_cbase_exons/CBase_external_matrix/Output_cactus/cactus/Anc4->hg38/syn_output_data_preparation_cactus.txt'
 

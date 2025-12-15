@@ -3,6 +3,7 @@ from concurrent.futures import ProcessPoolExecutor
 import pandas as pd
 import numpy as np
 from collections import Counter
+import pickle
 '''
 DATA
 exon_file - species data with reconstructed windows, all seq on + strand, 
@@ -27,11 +28,22 @@ hueristics about ancestral sequneces eg gene number of each base, codn ending et
 
 '''
 
-class GeneContentCounter(MutationMatrixGenerator):
-    def __init__(self, species, possible_species, exon_file, gene_annotations, output_dir):
-        #using init from parent class
-        super().__init__(species, possible_species, exon_file, gene_annotations, output_dir)
-
+class GeneContentCounter():
+    def __init__(self, input_file, output_file):
+        self.input_file = input_file
+        self.output_file=output_file
+        self.bases = ['A', 'C', 'G', 'T']
+        self.codon_table = {
+            'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+            'AAC':'N', 'AAT':'N', 'AAA':'K', 'AAG':'K', 'AGC':'S', 'AGT':'S', 'AGA':'R', 'AGG':'R',
+            'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L', 'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P',
+            'CAC':'H', 'CAT':'H', 'CAA':'Q', 'CAG':'Q', 'CGA':'R', 'CGC':'R', 'CGG':'R', 'CGT':'R',
+            'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V', 'GCA':'A', 'GCC':'A', 'GCG':'A', 'GCT':'A',
+            'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E', 'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G',
+            'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L',
+            'TAC':'Y', 'TAT':'Y', 'TAA':'_', 'TAG':'_', 'TGC':'C', 'TGT':'C', 'TGA':'_', 'TGG':'W'
+        }
+        
     #for each gene extract list of mutation types at positions : 
     # 1 if non syn, 0 if syn?
     
@@ -40,6 +52,11 @@ class GeneContentCounter(MutationMatrixGenerator):
         
         return counts['A'], counts['C'], counts['G'], counts['T']
     
+    def find_mutation_type(self, ref, alt):
+        if ref in self.codon_table and alt in self.codon_table:
+            return 0 if self.codon_table[ref] == self.codon_table[alt] else 1
+        return -1
+
     def count_oppurtunities(self,seq):
         M_n = 0
         M_s =0 
@@ -85,12 +102,30 @@ class GeneContentCounter(MutationMatrixGenerator):
     
         return M_n, M_s, AT_ending, GC_ending, syn_AT_ending, syn_GC_ending
     
+    def load_pickle_records_to_df(self,path):
+        rows = []
+        with open(path, "rb") as f:
+            while True:
+                try:
+                    obj = pickle.load(f)
+                except EOFError:
+                    break
+
+                if isinstance(obj, list):     # came from chunked writer
+                    rows.extend(obj)
+                else:                          # came from per-record writer
+                    rows.append(obj)
+
+        return pd.DataFrame(rows,columns=['gene','seq','trinucs']).set_index('gene') 
+
+
+
     def run(self):
         self.oppurtunities ={}
-        self.load_data()
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        for gene, gene_df in self.all_exons_df.groupby("gene"):
-            seq, trinucs = self.extract_gene_seq_trinucs(gene_df)
+        #self.output_dir.mkdir(parents=True, exist_ok=True)
+        seq_df = self.load_pickle_records_to_df(self.input_file)
+        for gene, row in seq_df.iterrows():
+            seq = row['seq']
             if len(seq) % 3 == 0:
                 M_n, M_s, AT_ending, GC_ending, syn_AT_ending, syn_GC_ending  = self.count_oppurtunities(seq)
                 A,C,G,T = self.count_total_gc_content_in_gene(seq)
@@ -99,17 +134,16 @@ class GeneContentCounter(MutationMatrixGenerator):
         oppurtunities_df.index = ['M_n', 'M_s', 'AT_ending', 'GC_ending', 'syn_AT_ending', 'syn_GC_ending','A','C','G','T']
         #transpose df , make genes index
         oppurt_transpose = oppurtunities_df.transpose()
-        oppurt_transpose.to_csv(self.output_dir/self.species)
+        oppurt_transpose.to_csv(self.output_file)
                 #function to count content per window
                 
                 
 
 
 
-possible_species = ['hg38',  'Anc4']
-
+'''
 def run_for_species(speci):
-    exon_file= '/home/maria/run_simulations_cactus/auxillary_wg/anc4_nodup_nocpg.bed' #edit
+    exon_file = '/home/maria/cactus_target_size/auxillary/extracted_df_nocpg_nodup.bed' #edit
     gene_annotations = '/home/maria/filter_transcripts/output/exon_merged_ids_sort.bed'
     output_dir = f'/home/maria/run_simulations_cactus/output_anc4_hg38/{speci}_genome_content'
 
@@ -120,3 +154,4 @@ def run_for_species(speci):
 with ProcessPoolExecutor(max_workers=3) as executor:
     executor.map(run_for_species, possible_species)
 
+'''

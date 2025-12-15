@@ -2,7 +2,7 @@ from MutationMatrixGenerator import MutationMatrixGenerator
 from MultiplyTargets import MultiplyTargets
 from concurrent.futures import ProcessPoolExecutor
 
-'''
+
 species = 'hg38'
 possible_species = ['hg38',  'GCA_028858775', 'Anc4']
 exon_file = '/home/maria/cactus_target_size/auxillary/extracted_df_nocpg_nodup.bed'
@@ -13,11 +13,11 @@ output_dir = '/home/maria/run_simulations_cactus/target_sizes_anc4_hg38/hg38'
 generator = MutationMatrixGenerator(species, possible_species, exon_file, gene_annotations, output_dir)
 generator.run()
 
-'''
+
 def process_one_signature(sig) -> str:
     calc = MultiplyTargets(signature=sig,
                             input_glob= f'/home/maria/run_simulations_cactus/target_sizes_anc4_hg38/hg38/*',
-                            output_dir=f"/home/maria/run_simulations_cactus/output_anc4_hg38/hg38",
+                            output_dir=f"/home/maria/run_simulations_cactus/output_anc4_hg38/hg38_noM_n",
                             gene_strand_file='/home/maria/filter_transcripts/output/exon_merged_ids_strands')
     calc.calc_for_sim()
     return 

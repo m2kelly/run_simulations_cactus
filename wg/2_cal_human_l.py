@@ -1,25 +1,23 @@
-from NeutralEvolutionSimulator import NeutralEvolutionSimulator
-from CalculateSimulatedTarget import CalculateSimulatedTarget
-from MultiplyTargets import MultiplyTargets
 from MutationMatrixGenerator import MutationMatrixGenerator
+from MultiplyTargets import MultiplyTargets
 from concurrent.futures import ProcessPoolExecutor
 
-#ALREADY DONE, JUST REDOING MULTIPLY MATRIX FOR L, RATHER THAN L_N = L/m_N
-'''
-matrix_generator = MutationMatrixGenerator('', '', '', '', '')
-print(f'calculating targets for simulation ')
-target_caller = CalculateSimulatedTarget(
-matrix_generator,
-input_file = '/home/maria/run_simulations_cactus/auxiliary/anc4_HCLCA/processed_gene_seqs.pkl',
-output_dir = '/home/maria/run_simulations_cactus/target_sizes_anc4_hg38/Anc4',
-)
-target_caller.run_parallel()
 
-'''
+species = 'hg38'
+possible_species = ['hg38',  'GCA_028858775', 'Anc4']
+exon_file = '/home/maria/cactus_target_size/auxillary/extracted_df_nocpg_nodup.bed'
+gene_annotations = '/home/maria/filter_transcripts/output/exon_merged_ids_sort.bed'
+output_dir = '/home/maria/run_simulations_cactus/target_sizes_anc4_hg38/hg38'
+
+
+generator = MutationMatrixGenerator(species, possible_species, exon_file, gene_annotations, output_dir)
+generator.run()
+
+
 def process_one_signature(sig) -> str:
     calc = MultiplyTargets(signature=sig,
-                            input_glob= f'/home/maria/run_simulations_cactus/target_sizes_anc4_hg38/Anc4/*',
-                            output_dir=f"/home/maria/run_simulations_cactus/output_anc4_hg38/Anc4_noM_n",
+                            input_glob= f'/home/maria/run_simulations_cactus/target_sizes_anc4_hg38/hg38/*',
+                            output_dir=f"/home/maria/run_simulations_cactus/output_anc4_hg38/hg38",
                             gene_strand_file='/home/maria/filter_transcripts/output/exon_merged_ids_strands')
     calc.calc_for_sim()
     return 
@@ -35,9 +33,6 @@ DEFAULT_SIGNATURE_LIST = [
 ]
 
 print('mulitplying by signatures')
-with ProcessPoolExecutor(max_workers=20) as executor:
+with ProcessPoolExecutor(max_workers=10) as executor:
     executor.map(process_one_signature, DEFAULT_SIGNATURE_LIST)
-
-
-
 
